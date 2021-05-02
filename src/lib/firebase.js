@@ -1,8 +1,6 @@
 import Firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/auth';
-import { seedDatabase } from './seed';
-//  Call the seed file only once
 
 const config = {
   apiKey: 'AIzaSyCxcaZCK1xrobZx5OdxAVlL5uDZOAvMYSQ',

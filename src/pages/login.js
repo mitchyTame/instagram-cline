@@ -5,7 +5,7 @@ import * as ROUTES from '../constants/routes';
 
 export default function Login() {
   const history = useHistory();
-  const firebase = useContext(FirebaseContext);
+  const { firebase } = useContext(FirebaseContext);
 
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
@@ -19,7 +19,11 @@ export default function Login() {
     try {
       await firebase.auth().signInWithEmailAndPassword(emailAddress, password);
       history.push(ROUTES.Dashboard);
-    } catch (error) {}
+    } catch (err) {
+      setEmailAddress('');
+      setPassword('');
+      setError(err.message);
+    }
   };
 
   useEffect(() => {

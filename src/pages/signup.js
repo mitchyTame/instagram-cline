@@ -2,32 +2,53 @@ import { useState, useContext, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import FirebaseContext from '../context/firebase';
 import * as ROUTES from '../constants/routes';
+import { doesUserNameExist } from '../services/firebase';
 
-export default function Login() {
+export default function Signup() {
   const history = useHistory();
   const { firebase } = useContext(FirebaseContext);
 
+  const [userName, setUserName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
-
   const [error, setError] = useState('');
-  const isInvalid = password === '' || emailAddress === '';
 
-  const handleLogin = async (event) => {
+  const isInvalid = password === '' || emailAddress === '';
+  const handleSignup = async (event) => {
     event.preventDefault();
 
+    const userNameExists = await doesUserNameExist(userName);
+    if (userNameExists) {
+      try {
+        const createdUserResult = await firebase
+          .auth()
+          .CreatedUserWithEmailAndPassword(emailAddress, password);
+        await createdUserResult.user.UpdateProfile({
+          displayName: userName,
+        });
+
+        await firebase.firestore().Collection('users').Add({
+          userId: createdUserResult.user.uid,
+          username: username.toLowerCase(),
+          fullName,
+          emailAddress: emailAddress.toLowerCase(),
+          dateCreated: Date.Now(),
+        });
+
+        history.push(Routes.Dashboard);
+      } catch (error) {}
+    }
+
     try {
-      await firebase.auth().signInWithEmailAndPassword(emailAddress, password);
-      history.push(ROUTES.Dashboard);
+      console.log('');
     } catch (err) {
-      setEmailAddress('');
-      setPassword('');
-      setError(err.message);
+      console.log(err);
     }
   };
 
   useEffect(() => {
-    document.title = 'Instagram - Login';
+    document.title = 'Instagram - Signup';
   }, []);
 
   return (
@@ -50,7 +71,21 @@ export default function Login() {
           </h1>
           {error && <p className="mb-4 text-xs text-red-primary">{error}</p>}
 
-          <form onSubmit={handleLogin} method="POST">
+          <form onSubmit={handleSignup} method="POST">
+            <input
+              aria-label="enter your Username"
+              type="text"
+              placeholder="Username"
+              className="text-small text-gray-base w-full py-5 px-4 h-2 border border-gray-primary rounded mb-2"
+              onChange={({ target }) => setUserName(target.value)}
+            />
+            <input
+              aria-label="enter your Full Name"
+              type="text"
+              placeholder="Full name"
+              className="text-small text-gray-base w-full py-5 px-4 h-2 border border-gray-primary rounded mb-2"
+              onChange={({ target }) => setFullName(target.value)}
+            />
             <input
               aria-label="enter your email address"
               type="text"
@@ -74,15 +109,15 @@ export default function Login() {
               className={`bg-blue-medium text-white w-full rounded h-8 font-bold
               ${isInvalid && 'opacity-50'}`}
             >
-              Login
+              Signup
             </button>
           </form>
         </div>
         <div className="flex justify-center items-center flex-col w-full bg-white p-4 border border-gray-primary">
           <p className="text-sm">
-            Don't have an account?
-            <Link to={ROUTES.SIGN_UP} className="font-bold text-blue-medium">
-              &nbsp;Sign Up
+            Do you have an account already?
+            <Link to={ROUTES.Login} className="font-bold text-blue-medium">
+              &nbsp;Login
             </Link>
           </p>
         </div>
